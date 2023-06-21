@@ -7,8 +7,10 @@ import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
 
 const products = productsFromServer.map((product) => {
-  const foundCategory = categoriesFromServer.find(category => category.id === product.categoryId);
-  const foundUser = usersFromServer.find(user => user.id === foundCategory.ownerId);
+  const foundCategory = categoriesFromServer.find(category => (
+    category.id === product.categoryId)) || null;
+  const foundUser = usersFromServer.find(user => (
+    user.id === foundCategory.ownerId)) || null;
 
   return {
     id: product.id,
@@ -16,7 +18,7 @@ const products = productsFromServer.map((product) => {
     category: foundCategory,
     user: foundUser,
   };
-});
+}) || null;
 
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
@@ -25,7 +27,6 @@ export const App = () => {
 
   const handleUserFilter = (user) => {
     setSelectedUser(user);
-    setSearch('');
   };
 
   const handleSearchChange = (event) => {
@@ -33,9 +34,7 @@ export const App = () => {
   };
 
   const handleClearSearch = () => {
-    setSelectedUser(null);
     setSearch('');
-    setSelectedCategories([]);
   };
 
   const handleClearCategories = () => {
@@ -50,11 +49,18 @@ export const App = () => {
     }
   };
 
+  const handleResetAll = () => {
+    setSelectedUser(null);
+    setSearch('');
+    setSelectedCategories([]);
+  };
+
   const filteredProducts = products.filter((product) => {
     const matchesUser = !selectedUser || product.user.id === selectedUser.id;
-    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory
-      = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+    const matchesSearch = product.name.toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesCategory = selectedCategories.length === 0
+      || selectedCategories.includes(product.category);
 
     return matchesUser && matchesSearch && matchesCategory;
   });
@@ -140,10 +146,10 @@ export const App = () => {
                 <a
                   key={category.id}
                   data-cy="Category"
+                  href="#/"
                   className={cn('button mr-2 my-1', {
                     'is-info': selectedCategories.includes(category),
                   })}
-                  href="#/"
                   onClick={() => handleCategoryFilter(category)}
                 >
                   {category.title}
@@ -156,7 +162,7 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
-                onClick={handleClearSearch}
+                onClick={handleResetAll}
               >
                 Reset all filters
               </a>
@@ -238,7 +244,7 @@ export const App = () => {
                     <td data-cy="ProductName">{product.name}</td>
                     <td data-cy="ProductCategory">
                       {product.category.icon}
-                      -
+                      {' - '}
                       {product.category.title}
                     </td>
 
@@ -255,7 +261,6 @@ export const App = () => {
               </tbody>
             </table>
           )}
-
         </div>
       </div>
     </div>
